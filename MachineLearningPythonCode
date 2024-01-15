@@ -1,0 +1,95 @@
+import pyodbc
+import pandas as pd
+import nltk
+from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+import re
+
+# Download NLTK resources (if not already downloaded)
+nltk.download('punkt')
+nltk.download('wordnet')
+
+# Define the connection parameters for Azure
+server = 'scdfboqserver.database.windows.net'
+database = 'scdfBoQ'
+username = 'prodesign'
+password = 'BoQ@2023'
+driver = '{ODBC Driver 17 for SQL Server}'
+
+# Create a connection string
+connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
+
+# Establish a connection
+connection = pyodbc.connect(connection_string)
+
+# SQL query to retrieve data
+query = "SELECT * FROM dbo.CleanedBoQ"
+
+# Read data into a pandas DataFrame
+cleaned_boq_data = pd.read_sql(query, connection)
+
+# Initialize the Porter Stemmer and WordNet Lemmatizer
+porter = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
+
+# Function to perform stemming, lemmatization, and separate numbers from text
+def process_text(text):
+    if text is None:
+        return None
+    # Tokenize the text
+    tokens = word_tokenize(text)
+    # Apply stemming and lemmatization to each token
+    processed_tokens = [lemmatizer.lemmatize(porter.stem(word)) for word in tokens]
+    # Separate numbers from text (e.g., '250kva' becomes '250 kva')
+    processed_tokens = [re.sub(r'(\d)([a-zA-Z])', r'\1 \2', token) for token in processed_tokens]
+    # Join the processed tokens back into a sentence
+    processed_text = ' '.join(processed_tokens)
+    return processed_text
+
+# Apply processing to the 'Description' column
+cleaned_boq_data['ProcessedDescription'] = cleaned_boq_data['Description'].apply(process_text)
+
+# Function to search for a keyword in the 'ProcessedDescription' column (case-insensitive)
+def search_keyword(keyword):
+    # Process the keyword
+    processed_keyword = process_text(keyword)
+    
+    # Tokenize the processed keyword
+    tokenized_keyword = word_tokenize(processed_keyword)
+
+    # Function to check if all tokens in the keyword are present in the processed descriptions
+    def contains_all_tokens(row):
+        if pd.isnull(row['ProcessedDescription']):
+            return False
+        return all(token in row['ProcessedDescription'] for token in tokenized_keyword)
+
+    # Apply the function to filter rows
+    matches = cleaned_boq_data[cleaned_boq_data.apply(contains_all_tokens, axis=1)]
+    return matches
+
+# User inputs a keyword
+user_keyword = input("Enter a keyword: ")
+
+# Search for the keyword in the processed descriptions
+result = search_keyword(user_keyword)
+
+# Filter rows where 'Rate' column contains only numeric values
+numeric_rate_result = result[pd.to_numeric(result['Rate'], errors='coerce').notnull()]
+
+# Compute average, minimum, and maximum rates
+average_rate = numeric_rate_result['Rate'].astype(float).mean()
+min_rate = numeric_rate_result['Rate'].astype(float).min()
+max_rate = numeric_rate_result['Rate'].astype(float).max()
+
+# Display the result
+print("Identified Rows:")
+print(numeric_rate_result[['Description', 'ProcessedDescription', 'Rate']])
+
+# Print computed average, minimum, and maximum rates
+print("\nComputed Rates:")
+print("Average Rate:", average_rate)
+print("Minimum Rate:", min_rate)
+print("Maximum Rate:", max_rate)
+
+# Close the connection
+connection.close()
