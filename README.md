@@ -38,6 +38,12 @@ A program was then written in Python to import the data from Azure and perform d
 
 Another program was written in Python to import the cleaned data from Azure to perform machine learning.
 
+## Methodology
+
+The following is what I have achieved so far:
+
+![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/fce6dd04-efa2-4921-9f09-42186a7b2897)
+
 ## Assistance Needed
 
 I am seeking your valuable insights and opinions on the methodology I am using to achieve the aims and objectives of this project. Specifically, I would appreciate feedback on the following aspects:
