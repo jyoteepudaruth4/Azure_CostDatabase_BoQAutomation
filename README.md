@@ -2,7 +2,7 @@
 
 ## Aims and Objectives
 
-The aim of this project is to develop a user interface for MEP (Mechanical, Electrical, and Plumbing) BoQ (Bill of Quantities) in Excel, providing predictive rates as engineers enter items and descriptions. The predictive rates are generated using information from a database of BoQs of previous engineering projects.
+The aim of this project is to develop a user interface for filling in MEP (Mechanical, Electrical, and Plumbing) BoQ (Bill of Quantities) in Excel, providing predictive rates as engineers enter items and descriptions. The predictive rates are generated in real-time using information from a database of BoQs from previous engineering projects.
 
 The objectives are:
 1. To convert all MEP BoQ (Excel) into a standard format.
@@ -14,23 +14,25 @@ The objectives are:
 
 ### Step 1: Converting BoQs to a Standard Format using VBA
 
-I have all my BoQs stored in a folder on my Desktop. I used VBA to convert the BoQs into a standard format. The latter was stored in a different folder.
+All BoQs are stored in a folder on my Desktop. I used VBA to convert the BoQs into a standard format and to store them in a different folder on my Desktop.
 
-#### Original BoQ:
+#### Snippet of a random BoQ excel file (original):
 ![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/c18a441a-0701-407a-ab54-b40913799458)
 
-#### Modified BoQ:
+#### Snippet of the modified excel file:
 ![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/7c0169bd-14e1-40c0-b433-2cc0ed14bf38)
 
 ### Step 2: Storing BoQs on Azure
 
-All BoQ files were then imported into a single table on Azure as shown below:
+All BoQ files were then imported simultaneously into a single table on Azure as shown below:
 
 ![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/719c71fc-77a5-4153-9152-ed7e1fc19677)
 
 ### Step 3: Data Cleaning with Python
 
-A program was then written in Python to import the data from Azure and perform data cleaning, such as handling duplicate entries and empty rows. The cleaned data was then imported into a separate table on Azure.
+A program was then written in Python to import the data from Azure and perform data cleaning, such as handling duplicate entries and empty rows. The cleaned data was then imported into a separate table on Azure as shown below:
+
+![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/d17accf3-ab78-457f-9c35-b2e271900442)
 
 ### Step 4: Machine Learning with Python
 
