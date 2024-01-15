@@ -4,8 +4,7 @@
 
 The aim of this project is to develop a user interface for MEP (Mechanical, Electrical, and Plumbing) BoQ (Bill of Quantities) in Excel, providing predictive rates as engineers enter items and descriptions. The predictive rates are generated using information from a database of BoQs of previous engineering projects.
 
-### Objectives
-
+The objectives are:
 1. To convert all MEP BoQ (Excel) into a standard format.
 2. To store all BoQs on Azure.
 3. To perform data cleaning on the data.
