@@ -1,0 +1,143 @@
+Sub ProcessClosedWorkbooks()
+    Dim wb As Workbook
+    Dim filePath As String
+    Dim destFolder As String
+    
+    ' Define the path to the folder containing the workbooks
+    Dim folderPath As String
+    folderPath = "C:\Users\Jyotee Pudaruth\ProDesign\Stephie Zephyr - Jyotee"
+    
+    ' Define the destination folder for saving modified files
+    destFolder = folderPath & "\ModifiedFiles"
+    
+    ' Create the destination folder if it doesn't exist
+    If Dir(destFolder, vbDirectory) = "" Then
+        MkDir destFolder
+    End If
+    
+    ' Loop through all files in the folder
+    filePath = Dir(folderPath & "\*.xlsx")
+    Do While filePath <> ""
+        ' Open each workbook
+        Set wb = Workbooks.Open(folderPath & "\" & filePath)
+        
+        ' Call the ProcessData subroutine to perform data processing on the first sheet
+        ProcessData wb.Sheets(1), destFolder
+        
+        ' Close the workbook without saving changes (original workbook in folderPath)
+        wb.Close SaveChanges:=False
+        
+        ' Move to the next file
+        filePath = Dir
+    Loop
+End Sub
+
+Sub ProcessData(ws As Worksheet, destFolder As String)
+    Dim headerRow As Long
+            
+    ' Unmerge all cells in the sheet
+    ws.Cells.UnMerge
+            
+    ' Set the located row as the header
+    headerRow = FindHeaderRow(ws)
+    ws.Rows(headerRow).Copy
+    ws.Rows(1).PasteSpecial Paste:=xlPasteAll, Operation:=xlNone, SkipBlanks:=False, Transpose:=False
+    Application.CutCopyMode = False
+    ws.Rows(headerRow).Delete
+    
+    ' Rename columns based on conditions
+    RenameColumns ws
+    
+    ' Delete extra columns
+    DeleteExtraColumns ws
+    
+    ' Find the project name and delete the row containing "Bill No"
+    billNoRow = FindAndDeleteBillNoRow(ws)
+
+    ' Rename the first sheet to "BoQ"
+    ws.Parent.Sheets(1).Name = "BoQ"
+    
+    ' Delete other sheets except "BoQ"
+    DeleteOtherSheets ws.Parent
+        
+    ' Save the modified workbook to the destination folder
+    ws.Parent.SaveAs destFolder & "\" & "modified_" & ws.Parent.Name
+    
+    ' Optionally, you can close the workbook after saving changes
+    ' ws.Parent.Close SaveChanges:=False
+End Sub
+
+Function FindHeaderRow(ws As Worksheet) As Long
+    Dim headerRow As Long
+    Dim cell As Range
+
+    ' Look for 'Item', 'Description', 'Unit', 'Qty', 'Rate', 'Amount' in the first 5 rows
+    For headerRow = 1 To 5
+        For Each cell In ws.Rows(headerRow).Cells
+            If cell.value = "Item" Or cell.value = "Description" Or cell.value = "Unit" Or _
+               cell.value = "Qty" Or cell.value = "Rate" Or cell.value = "Amount" Then
+                FindHeaderRow = headerRow
+                Exit Function
+            End If
+        Next cell
+    Next headerRow
+End Function
+
+Sub RenameColumns(ws As Worksheet)
+    Dim cell As Range
+    Dim columnNames As Variant
+    columnNames = Array("Item", "Description", "Unit", "Qty", "Rate", "Amount")
+
+    For Each cell In ws.Rows(1).Cells
+        If InStr(1, cell.value, columnNames(0), vbTextCompare) > 0 Then
+            cell.value = columnNames(0)
+        ElseIf InStr(1, cell.value, columnNames(1), vbTextCompare) > 0 Then
+            cell.value = columnNames(1)
+        ElseIf InStr(1, cell.value, columnNames(2), vbTextCompare) > 0 Then
+            cell.value = columnNames(2)
+        ElseIf InStr(1, cell.value, columnNames(3), vbTextCompare) > 0 Then
+            cell.value = columnNames(3)
+        ElseIf InStr(1, cell.value, columnNames(4), vbTextCompare) > 0 Then
+            cell.value = columnNames(4)
+        ElseIf InStr(1, cell.value, columnNames(5), vbTextCompare) > 0 Then
+            cell.value = columnNames(5)
+        End If
+    Next cell
+End Sub
+
+Sub DeleteExtraColumns(ws As Worksheet)
+    Dim columnsToDelete As Variant
+    Dim col As Long
+
+    columnsToDelete = Array("Item", "Description", "Unit", "Qty", "Rate", "Amount")
+
+    For col = ws.UsedRange.Columns.Count To 1 Step -1
+        If IsError(Application.Match(ws.Cells(1, col).value, columnsToDelete, 0)) Then
+            ws.Columns(col).Delete
+        End If
+    Next col
+End Sub
+
+Function FindAndDeleteBillNoRow(ws As Worksheet)
+    Dim billNoRow As Range
+    Set billNoRow = ws.Rows.Find("Bill No.")
+    
+    If Not billNoRow Is Nothing Then
+        ' Delete the entire row containing "Bill No."
+        billNoRow.EntireRow.Delete
+    End If
+End Function
+
+Sub DeleteOtherSheets(wb As Workbook)
+    Dim sheet As Worksheet
+    
+    ' Loop through all sheets in the workbook
+    For Each sheet In wb.Sheets
+        ' Check if the sheet is not named "BoQ" and delete it
+        If sheet.Name <> "BoQ" Then
+            Application.DisplayAlerts = False ' Turn off alerts to avoid prompt
+            sheet.Delete
+            Application.DisplayAlerts = True
+        End If
+    Next sheet
+End Sub
