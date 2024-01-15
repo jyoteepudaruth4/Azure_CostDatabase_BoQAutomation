@@ -17,10 +17,10 @@ The objectives are:
 I have all my BoQs stored in a folder on my Desktop. I used VBA to convert the BoQs into a standard format. The latter was stored in a different folder.
 
 #### Original BoQ:
-[Insert Screenshot]
+![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/c18a441a-0701-407a-ab54-b40913799458)
 
 #### Modified BoQ:
-[Insert Screenshot]
+![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/7c0169bd-14e1-40c0-b433-2cc0ed14bf38)
 
 ### Step 2: Storing BoQs on Azure
 
