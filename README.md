@@ -26,7 +26,7 @@ I have all my BoQs stored in a folder on my Desktop. I used VBA to convert the B
 
 All BoQ files were then imported into a single table on Azure as shown below:
 
-[Insert Screenshot]
+![image](https://github.com/jyoteepudaruth4/Azure_CostDatabase_BoQAutomation/assets/156639095/719c71fc-77a5-4153-9152-ed7e1fc19677)
 
 ### Step 3: Data Cleaning with Python
 
