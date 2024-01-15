@@ -1,0 +1,90 @@
+import pyodbc
+import pandas as pd
+
+# Define the connection parameters
+server = 'scdfboqserver.database.windows.net'
+database = 'scdfBoQ'
+username = 'prodesign'
+password = 'BoQ@2023'
+driver = '{ODBC Driver 17 for SQL Server}'
+
+# Create a connection string
+connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
+
+# Establish a connection
+connection = pyodbc.connect(connection_string)
+
+# SQL query to retrieve data
+query = "SELECT * FROM dbo.UnifiedTable" 
+
+# Read data into a pandas DataFrame
+df = pd.read_sql(query, connection)
+
+# Close the connection
+connection.close()
+
+# Display the DataFrame
+print("Original DataFrame:")
+print(df.head(10))
+
+# Check for and remove duplicated entries
+df = df.drop_duplicates()
+
+# Remove rows where all columns are empty
+df = df.dropna(how='all', subset=['Item', 'Description', 'Unit', 'Qty', 'Rate', 'Amount'])
+
+# Replace non-numeric values with NaN in numeric columns
+numeric_cols = ['Qty', 'Rate', 'Amount']
+df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors='coerce')
+
+# Create a new DataFrame with selected columns
+new_df = df[['Item', 'Description', 'Unit', 'Qty', 'Rate', 'Amount']].copy()
+
+# Display the new DataFrame
+print("\nNew DataFrame:")
+print(new_df.head(10))
+
+# Establish a new connection for writing to the database
+connection = pyodbc.connect(connection_string)
+
+# Create a cursor for executing SQL queries
+cursor = connection.cursor()
+
+# Drop the CleanedBoQ table if it exists
+cursor.execute("IF OBJECT_ID('CleanedBoQ', 'U') IS NOT NULL DROP TABLE CleanedBoQ")
+
+# Create the CleanedBoQ table
+cursor.execute('''
+    CREATE TABLE CleanedBoQ (
+        Item NVARCHAR(MAX),
+        Description NVARCHAR(MAX),
+        Unit NVARCHAR(MAX),
+        Qty FLOAT,
+        Rate FLOAT,
+        Amount FLOAT
+    )
+''')
+connection.commit()
+
+# Convert to float, and set non-convertible values to None
+new_df['Qty'] = pd.to_numeric(new_df['Qty'], errors='coerce')
+new_df['Rate'] = pd.to_numeric(new_df['Rate'], errors='coerce')
+new_df['Amount'] = pd.to_numeric(new_df['Amount'], errors='coerce')
+
+# Convert DataFrame to a list of tuples, replacing NaN with None
+data = [tuple(map(lambda x: None if pd.isna(x) else x, row)) for row in new_df.values]
+
+# Define the SQL query for bulk insert with explicit data types
+query = """
+    INSERT INTO CleanedBoQ (Item, Description, Unit, Qty, Rate, Amount)
+    VALUES (?, ?, ?, ?, ?, ?)
+"""
+
+# Execute the query
+cursor.executemany(query, data)
+connection.commit()
+
+# Close the connection
+connection.close()
+
+print("\nData inserted into CleanedBoQ table.")
